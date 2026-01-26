@@ -1,0 +1,111 @@
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    /* ===============================
+       1️⃣ FILL FORM FROM URL PARAMS
+       =============================== */
+    const params = new URLSearchParams(window.location.search);
+
+    const nameInput  = document.querySelector('input[name="name"]');
+    const fuelInput  = document.querySelector('input[name="fuel"]');
+    const typeInput  = document.querySelector('input[name="type"]');
+    const seatsInput = document.querySelector('input[name="seats"]');
+
+    if (nameInput)  nameInput.value  = params.get('name')  || '';
+    if (fuelInput)  fuelInput.value  = params.get('fuel')  || '';
+    if (typeInput)  typeInput.value  = params.get('type')  || '';
+    if (seatsInput) seatsInput.value = params.get('seats') || '';
+
+    /* ===============================
+       2️⃣ EXPORT BUTTON LOGIC
+       =============================== */
+    const exportBtn = document.getElementById('exportBtn');
+
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const name  = nameInput?.value.trim()  || '';
+            const fuel  = fuelInput?.value.trim()  || '';
+            const type  = typeInput?.value.trim()  || '';
+            const seats = seatsInput?.value.trim() || '';
+
+            const exportParams = new URLSearchParams();
+            if (name)  exportParams.append('name', name);
+            if (fuel)  exportParams.append('fuel', fuel);
+            if (type)  exportParams.append('type', type);
+            if (seats) exportParams.append('seats', seats);
+
+            const url = '/export/cars' + (exportParams.toString() ? '?' + exportParams.toString() : '');
+            window.location.href = url;
+        });
+    }
+
+});
+</script>
+
+
+<section id="cars" class="cars-section">
+    <div class="container">
+        <h2>Our Car Collection</h2>
+
+        <!-- Search Form -->
+        <form method="get" class="search-bar" action="/?page=1#cars">
+            <input type="text" name="name" placeholder="Car name">
+            <input type="text" name="fuel" placeholder="Fuel">
+            <input type="text" name="type" placeholder="Type">
+            <input type="number" name="seats" placeholder="Seats">
+            <button type="submit" class="btn-primary">Search</button>
+            <button type="button" id="exportBtn" class="btn-primary" style="background:#4CAF50; margin-left:10px;">
+             📥 Export
+            </button>
+        </form>
+
+        <!-- Cars Grid -->
+        <div class="cars-grid">
+              {% if cars|length == 0 %}
+                <p>No cars  :'( ;'( </p>
+            {% else %}
+                {% for car in cars %}
+                <div class="car-card" onclick="openCarPopup({{ car.id }})">
+                    <div class="car-image">
+                        <img src="{{ car.images[0].image_url | asset_url }}" alt="{{ car.name }}">
+                    </div>
+                    <div class="car-info">
+                        <h3>{{ car.name }}</h3>
+                        <div class="car-price">
+                            {{ "{:,}".format(car.price_per_day) }} <span></span>
+                        </div>
+                        <div class="car-passengers">
+                            👥 {{ car.seats }} seats
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+             {% endif %}
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            {% if pagination.has_prev %}
+                <a href="?page={{ pagination.prev_num }}">« Prev</a>
+            {% endif %}
+
+            <span>Page {{ pagination.page }} of {{ pagination.pages }}</span>
+
+            {% if pagination.has_next %}
+                <a href="?page={{ pagination.next_num }}">Next »</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+<!-- Car Detail Modal -->
+<div id="carModal" class="car-popup-overlay" style="display: none;">
+    <div class="car-popup-content">
+        <button class="popup-close" onclick="closeCarPopup()">&times;</button>
+        <div id="carModalContent">
+            <!-- Car details will be loaded here -->
+        </div>
+    </div>
+</div>
+
