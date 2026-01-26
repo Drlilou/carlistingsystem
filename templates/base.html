@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Ramzi Cars - Car Rental Service{% endblock %}</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Social Sidebar -->
+    <div class="social-sidebar">
+        <a href="https://kanal.umk.ac.id/" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+        <a href="https://instagram.com/uh_studio.id?igsh=MXhpNDN0b2psendiaw==" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+        <a href="https://wa.me/6289667182588" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+        <div class="social-divider"></div>
+    </div>
+
+    {% include 'sections/header.html' %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    {% include 'sections/footer.html' %}
+
+    <!-- Modal -->
+    <div id="carPopup" class="car-popup-overlay" style="display:none;">
+        <div class="car-popup-content" id="carPopupContent"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
