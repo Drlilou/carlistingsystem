@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Car - Admin{% endblock %}
+
+{% block content %}
+<section class="cars-section">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-line"></div>
+            <h2 class="section-title">Add New Car</h2>
+        </div>
+
+        <form method="POST" class="contact-form" enctype="multipart/form-data">
+            <input type="text" name="name" placeholder="Car Name" required>
+            <input type="number" name="price" placeholder="Price per Day (e.g., 150)" min="1" required>
+            <input type="number" name="seats" placeholder="Number of Seats" min="1" max="9" required>
+            <input type="text" name="fuel" placeholder="Fuel Type (e.g., Petrol, Diesel)" required>
+            <input type="text" name="type" placeholder="Car Type (e.g., SUV, Sedan)" required>
+            <textarea name="description" placeholder="Car Description (optional)" rows="4"></textarea>
+
+            <!-- ============ MULTIPLE IMAGES ============ -->
+            <div style="margin: 24px 0; padding: 20px; background: #f8f9fa; border-radius: 10px; border: 1px dashed #ddd;">
+                <h3 style="margin-bottom: 16px; color: var(--text-dark);">📸 Car Images (at least 1 required)</h3>
+                
+                <!-- Option 1: Upload Files -->
+                <label for="image_files">Upload Images (PNG/JPG):</label>
+                <input type="file" name="image_files" multiple accept="image/*" 
+                       style="width: 100%; margin: 8px 0 16px;">
+
+                <!-- Option 2: External URLs -->
+                <p style="margin: 16px 0; font-weight: 600;">Or add image URLs (one per line):</p>
+                <textarea name="image_urls" placeholder="https://example.com/car1.jpg&#10;https://example.com/car2.jpg"
+                          rows="3" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px;"></textarea>
+
+                <p style="margin-top: 12px; font-size: 14px; color: var(--text-gray);">
+                    You can upload files, add URLs, or do both. At least one image is required.
+                </p>
+            </div>
+
+            <button type="submit" class="btn-primary btn-large">➕ Add Car</button>
+            <div class="contact-info">
+                <a href="{{ url_for('admin_dashboard') }}">← Cancel</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

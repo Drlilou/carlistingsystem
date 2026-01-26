@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Ramzi Cars{% endblock %}
+
+{% block content %}
+<section class="about-section">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-line"></div>
+            <h2 class="section-title">Admin Dashboard</h2>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="section-subtitle">
+                    {% for category, message in messages %}
+                        <p style="color: 
+                            {% if category == 'error' or category == 'danger' %}#e63946
+                            {% elif category == 'success' %}#2a9d8f
+                            {% elif category == 'warning' %}#f4a261
+                            {% else %}#6b7280{% endif %};">
+                            {{ message }}
+                        </p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div style="text-align: center; margin: 40px 0;">
+            <a href="{{ url_for('add_car') }}" class="btn-primary btn-large" style="margin-right: 16px;">
+                ➕ Add New Car
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn-primary" style="background: #6c757d;">
+                Logout
+            </a>
+        </div>
+
+        <div class="section-subtitle">
+            <p><strong>Total Cars:</strong> {{ cars_data | length }}</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

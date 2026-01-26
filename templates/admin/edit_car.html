@@ -1,0 +1,71 @@
+<!-- templates/admin/edit_car.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="max-width: 700px; margin: 40px auto;">
+    <h2>Edit Car: {{ car.name }}</h2>
+    <form method="post" enctype="multipart/form-data">
+        <div style="margin-bottom: 16px;">
+            <label>Name:</label>
+            <input type="text" name="name" value="{{ car.name }}" required style="width:100%; padding:8px;">
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label>Price per day:</label>
+            <input type="number" name="price" value="{{ car.price_per_day }}" min="1" required style="width:100%; padding:8px;">
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label>Seats:</label>
+            <input type="number" name="seats" value="{{ car.seats }}" min="1" required style="width:100%; padding:8px;">
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label>Fuel:</label>
+            <input type="text" name="fuel" value="{{ car.fuel }}" required style="width:100%; padding:8px;">
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label>Type:</label>
+            <input type="text" name="type" value="{{ car.car_type }}" required style="width:100%; padding:8px;">
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label>Description:</label>
+            <textarea name="description" style="width:100%; padding:8px; height:100px;">{{ car.description }}</textarea>
+        </div>
+
+        <!-- 🔸 Existing Images -->
+        <div style="margin-bottom: 16px;">
+            <label>Current Images:</label><br>
+            {% for img in car.images %}
+                <img src="{{ img.image_url | asset_url }}" alt="Current" style="width:80px; height:60px; object-fit:cover; margin:4px; border:1px solid #ddd;">
+            {% endfor %}
+        </div>
+
+        <!-- 🔸 Upload New Images -->
+        <div style="margin-bottom: 16px;">
+            <label>Upload New Images (optional):</label>
+            <input type="file" name="image_files" multiple accept=".png,.jpg,.jpeg,.webp,.gif" style="width:100%;">
+            <small>You can upload multiple files. They will be added to the car.</small>
+        </div>
+
+        <!-- 🔸 Additional Image URLs -->
+        <div style="margin-bottom: 16px;">
+            <label>Additional Image URLs (one per line, optional):</label>
+            <textarea name="image_urls" style="width:100%; padding:8px; height:80px;" placeholder="https://example.com/car1.jpg&#10;https://example.com/car2.jpg"></textarea>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label>
+                <input type="checkbox" name="replace_images" value="1"> Replace all existing images
+            </label>
+            <br>
+            <small>If checked, current images will be deleted and replaced with uploaded/URL images.</small>
+        </div>
+
+        <button type="submit" class="btn-primary">Update Car</button>
+        <a href="{{ url_for('admin_dashboard') }}" style="margin-left: 10px;">Cancel</a>
+    </form>
+</div>
+{% endblock %}
