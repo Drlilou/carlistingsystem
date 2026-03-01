@@ -4,3 +4,4 @@ Werkzeug
 openpyxl
 Flask-JSON
 Pillow
+Flask-Mail
