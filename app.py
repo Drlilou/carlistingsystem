@@ -30,6 +30,9 @@ ADMIN_PASSWORD_HASH = generate_password_hash("password123")  # Default password:
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cars.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "connect_args": {"check_same_thread": False}
+}
 db.init_app(app)
 
 
@@ -463,4 +466,5 @@ def export_cars():
     )
 
 if __name__ == "__main__":
+
     app.run(debug=True)
