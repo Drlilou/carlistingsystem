@@ -69,7 +69,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 {% for car in cars %}
                 <div class="car-card" onclick="openCarPopup({{ car.id }})">
                     <div class="car-image">
-                        <img src="{{ car.images[0].image_url | asset_url }}" alt="{{ car.name }}">
+                        {% if car.images|length > 0 %}
+                            <img src="{{ car.images[0].image_url | asset_url }}" alt="{{ car.name }}">
+                        {% else %}
+                            <img src="{{ 'images/default_car.png' | asset_url }}" alt="No image">
+                        {% endif %}
                     </div>
                     <div class="car-info">
                         <h3>{{ car.name }}</h3>

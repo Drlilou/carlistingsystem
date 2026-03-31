@@ -6,7 +6,6 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 import csv
 from io import StringIO
-from models import db, Car, CarImage 
 import os
 
 from openpyxl import Workbook
@@ -14,7 +13,6 @@ from openpyxl.drawing.image import Image as ExcelImage
 from openpyxl.styles import Font,PatternFill
 from io import BytesIO
 from datetime import datetime
-import os
 
 app = Flask(__name__)
 
@@ -24,9 +22,9 @@ app.secret_key = os.environ.get("SECRET_KEY", "your-very-secret-key-here")  # Ch
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD_HASH = generate_password_hash("password123")  # Default password: password123
 
-# 🔑 Simple admin credentials (in real app: use DB)
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD_HASH = generate_password_hash("password123")  # Default password: password123
+# Configure upload folder
+UPLOAD_FOLDER = 'static/images'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
 
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cars.db'
@@ -34,12 +32,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "connect_args": {"check_same_thread": False}
 }
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db.init_app(app)
 
 
-# Configure upload folder
-UPLOAD_FOLDER = 'static/images'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -121,24 +117,23 @@ def add_car():
                 if img and img.filename != '' and allowed_file(img.filename):
                     filename = secure_filename(img.filename)
                     base, ext = os.path.splitext(filename)
+                    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+                    filename = f"{base}_{timestamp}{ext}"
                     counter = 1
                     while os.path.exists(os.path.join(UPLOAD_FOLDER, filename)):
-                        filename = f"{base}_{counter}{ext}"
+                        filename = f"{base}_{timestamp}_{counter}{ext}"
                         counter += 1
                     filepath = os.path.join(UPLOAD_FOLDER, filename)
                     img.save(filepath)
                     image_sources.append(f"images/{filename}")
 
-            # 2. Process URLs from textarea
+            # 3. Process image URLs (optional)
             image_urls_raw = request.form.get('image_urls', '').strip()
             if image_urls_raw:
                 urls = [url.strip() for url in image_urls_raw.split('\n') if url.strip()]
                 image_sources.extend(urls)
 
-            # 3. Validate at least one image
-            if not image_sources:
-                flash('At least one image (upload or URL) is required.', 'error')
-                return render_template('admin/add_car.html')
+            # No validation for images - they are optional
 
             # === Save to database ===
             new_car = Car(
@@ -170,7 +165,7 @@ def add_car():
     return render_template('admin/add_car.html')
 
 # ===== ADMIN DASHBOARD =====
-@app.route('/')
+@app.route('/admin/dashboard')
 def admin_dashboard():
     if not session.get('admin_logged_in'):
         flash('Please log in first.', 'warning')
@@ -206,12 +201,17 @@ def upload_image():
     
     if file:
         filename = secure_filename(file.filename)
+        base, ext = os.path.splitext(filename)
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        filename = f"{base}_{timestamp}{ext}"
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
         
         # Assuming you provide car_id via form data to associate the image
         car_id = request.form.get('car_id')
-        new_image = CarImage(image_url=os.path.join('uploads', filename), car_id=car_id)
+        if not car_id:
+            return jsonify({"error": "car_id required"}), 400
+        new_image = CarImage(image_url=f"images/{filename}", car_id=car_id)
         db.session.add(new_image)
         db.session.commit()
         
@@ -266,9 +266,11 @@ def edit_car(car_id):
                 if img and img.filename != '' and allowed_file(img.filename):
                     filename = secure_filename(img.filename)
                     base, ext = os.path.splitext(filename)
+                    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+                    filename = f"{base}_{timestamp}{ext}"
                     counter = 1
                     while os.path.exists(os.path.join(UPLOAD_FOLDER, filename)):
-                        filename = f"{base}_{counter}{ext}"
+                        filename = f"{base}_{timestamp}_{counter}{ext}"
                         counter += 1
                     filepath = os.path.join(UPLOAD_FOLDER, filename)
                     img.save(filepath)
@@ -294,11 +296,7 @@ def edit_car(car_id):
                         db.session.add(CarImage(image_url=url, car_id=car.id))
                 # If no new images, keep existing
 
-            # Ensure at least one image exists
-            total_images = CarImage.query.filter_by(car_id=car.id).count()
-            if total_images == 0 and not new_image_sources:
-                flash('At least one image is required.', 'error')
-                return render_template('admin/edit_car.html', car=car)
+            # Images are optional - no validation needed
 
             db.session.commit()
             flash(f'✅ Car "{car.name}" updated successfully!', 'success')
@@ -401,7 +399,7 @@ def export_cars():
     start_row = 5
     headers = [
         "ID", "Name", "Price / Day", "Seats",
-        "Fuel", "Car Type", "Description"#, "Image URLs"
+        "Fuel", "Car Type", "Description"
     ]
 
     header_fill = PatternFill(
@@ -419,27 +417,19 @@ def export_cars():
         cell = ws.cell(row=start_row, column=col, value=header)
         cell.font = header_font
         cell.fill = header_fill
-    """for col, header in enumerate(headers, 1):
-        cell = ws.cell(row=start_row, column=col, value=header)
-        cell.font = Font(bold=True)"""
 
     # =========================
     # TABLE DATA
     # =========================
     row = start_row + 1
     for car in cars:
-        image_urls = "; ".join(img.image_url for img in car.images)
-
-        ws.append([
-            car.id,
-            car.name,
-            car.price_per_day,
-            car.seats,
-            car.fuel,
-            car.car_type,
-            car.description or "",
-            #image_urls
-        ])
+        ws.cell(row=row, column=1, value=car.id)
+        ws.cell(row=row, column=2, value=car.name)
+        ws.cell(row=row, column=3, value=car.price_per_day)
+        ws.cell(row=row, column=4, value=car.seats)
+        ws.cell(row=row, column=5, value=car.fuel)
+        ws.cell(row=row, column=6, value=car.car_type)
+        ws.cell(row=row, column=7, value=car.description or "")
         row += 1
 
     # =========================
